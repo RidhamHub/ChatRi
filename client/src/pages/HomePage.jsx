@@ -3,11 +3,11 @@ import SideBar from "../components/SideBar";
 import ChatContainer from "../components/ChatContainer";
 import { ChatContext } from "../../context/chatContext";
 
-const Homepage = () => {
+const HomePage = () => {
   const { selectedUser } = useContext(ChatContext);
 
   return (
-    <div className="border w-full h-screen sm:px-[15%] sm:py-[5%]">     
+    <div className="border w-full h-screen sm:px-[15%] sm:py-[5%]">
       <div
         className="grid grid-cols-1 md:grid-cols-[1fr_2fr]
         relative overflow-hidden h-full
@@ -20,4 +20,4 @@ const Homepage = () => {
   );
 };
 
-export default Homepage;
+export default HomePage;

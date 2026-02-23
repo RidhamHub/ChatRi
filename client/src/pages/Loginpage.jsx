@@ -2,8 +2,8 @@ import React, { useContext, useState } from "react";
 import assets from "../assets/assets";
 import { AuthContext } from "../../context/authContext";
 
-const Loginpage = () => {
-  
+const LoginPage = () => {
+
   const [currState, setCurrState] = useState("Sign up");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,7 +31,7 @@ const Loginpage = () => {
     login(currState === "Sign up" ? "signup" : "login", {
       fullName,
       email,
-      password, 
+      password,
       bio,
     });
   };
@@ -150,4 +150,4 @@ const Loginpage = () => {
   );
 };
 
-export default Loginpage;
+export default LoginPage;
