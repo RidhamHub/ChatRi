@@ -38,7 +38,8 @@ const SideBar = () => {
       <div className="pb-5">
         {/* logo and 3 dots */}
         <div className="flex justify-between items-center">
-          <img src={assets.logo} alt="logo" className="max-w-40" />
+          <img src={assets.logo} alt="logo" className="max-w-15" />
+          <p>Chat-ri</p>
           <div className="relative py-2 group">
             <img
               src={assets.menu_icon}
@@ -61,7 +62,7 @@ const SideBar = () => {
         </div>
 
         {/* seacrh icon and inputr feild  */}
-        <div className="bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mt-5">
+        <div className="bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 ">
           <img src={assets.search_icon} alt="search" className="w-3" />
           <input
             onChange={(event) => setInput(event.target.value)}
