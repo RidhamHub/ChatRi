@@ -3,7 +3,7 @@ import SideBar from "../components/SideBar";
 import ChatContainer from "../components/ChatContainer";
 import { ChatContext } from "../../context/chatContext";
 
-export const Homepage = () => {
+const Homepage = () => {
   const { selectedUser } = useContext(ChatContext);
 
   return (
@@ -19,3 +19,5 @@ export const Homepage = () => {
     </div>
   );
 };
+
+export default Homepage;
