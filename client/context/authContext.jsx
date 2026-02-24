@@ -80,23 +80,30 @@ export const AuthProvider = ({ children }) => {
   };
 
   //connect socket function to handle socket connection and online users updates
-  const connectSocket = (userData) => {
-    if (!userData || socket?.connected) return;
+ const connectSocket = (userData) => {
+   if (!userData || socket?.connected) return;
 
-    const newSocket = io(backendUrl, {
-      query: {
-        userId: userData._id,
-      },
-    });
+   const newSocket = io(backendUrl, {
+     auth: {
+       userId: userData._id, // 🔥 correct way
+     },
+     withCredentials: true,
+   });
 
-    newSocket.connect();
-    setSocket(newSocket);
+   setSocket(newSocket);
 
-    newSocket.on("getOnlineUser", (userIds) => {
-      setOnlineUser(userIds);
-    });
-  };
+   newSocket.on("connect", () => {
+     console.log("Socket connected:", newSocket.id);
+   });
 
+   newSocket.on("getOnlineUser", (userIds) => {
+     setOnlineUser(userIds);
+   });
+
+   newSocket.on("disconnect", () => {
+     console.log("Socket disconnected");
+   });
+ };
   //whenever we open the web page we have to execute the checkAuth so create useEffect hook
   useEffect(() => {
     if (token) {
@@ -119,4 +126,3 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-

@@ -9,18 +9,18 @@ const protectRoute = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ success: false, msg: "Unauthorized: token missing" });
         }
-        console.log("TOKEN RECEIVED:", token);   // 👈 ADD
+        // console.log("TOKEN RECEIVED:", token);   // 👈 ADD
 
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("DECODED:", decoded);        // 👈 ADD
+        // console.log("DECODED:", decoded);        // 👈 ADD
 
         if (!decoded || !decoded.userId) {
             return res.status(401).json({ success: false, msg: "Unauthorized: invalid token payload" });
         }
 
         const foundUser = await User.findById(decoded.userId).select("-password");
-        console.log("USER FOUND:", foundUser?._id);   // 👈 ADD
+        // console.log("USER FOUND:", foundUser?._id);   // 👈 ADD
 
         if (!foundUser) {
             return res.json({ success: false, msg: "User not found in database" });
