@@ -3,9 +3,12 @@ import assets from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/authContext";
 import { ChatContext } from "../../context/chatContext";
+import { useRef } from "react";
 
 const SideBar = () => {
   const { logout, onlineUser } = useContext(AuthContext);
+  const [openMenu, setOpenMenu] = useState(false);
+  const menuRef = useRef(null);
 
   const {
     getUsers,
@@ -31,6 +34,20 @@ const SideBar = () => {
     getUsers();
   }, [onlineUser]);
   // console.log("Users from context:", users);
+
+  // Close 3 dot button when clicking elsewhere
+  useEffect(() => {
+    const handleOutSideClickForThreeDot = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {  // ref valu div && user clicked outside the refered DOM element....
+        setOpenMenu(false);
+      };
+    };
+
+    document.addEventListener("click", handleOutSideClickForThreeDot);
+    return () => {
+      document.removeEventListener("click", handleOutSideClickForThreeDot);
+    }
+  }, []);
   return (
     <div
       className={`bg-[#8185B2]/10 h-full  p-5 rounded-r-xl overflow-y-scroll text-white ${selectedUser ? "max-md:hidden" : ""}  `}
@@ -40,24 +57,27 @@ const SideBar = () => {
         <div className="flex justify-between items-center">
           <img src={assets.logo} alt="logo" className="max-w-15" />
           <p>Chat-ri</p>
-          <div className="relative py-2 group">
+          <div ref={menuRef} className="relative py-2 ">
             <img
               src={assets.menu_icon}
               alt="Menu"
               className="max-w-5 cursor-pointer"
+              onClick={() => setOpenMenu((prev) => !prev)}
             />
-            <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block">
-              <p
-                onClick={() => navigate("/profile")}
-                className="cursor-pointer text-sm"
-              >
-                Edit profile
-              </p>
-              <hr className="my-2 border-t border-gray-500 " />
-              <p onClick={() => logout()} className="cursor-pointer text-sm">
-                Logout
-              </p>
-            </div>
+            {openMenu && (
+              <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 ">
+                <p
+                  onClick={() => navigate("/profile")}
+                  className="cursor-pointer text-sm"
+                >
+                  Edit profile
+                </p>
+                <hr className="my-2 border-t border-gray-500 " />
+                <p onClick={() => logout()} className="cursor-pointer text-sm">
+                  Logout
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -73,7 +93,7 @@ const SideBar = () => {
         </div>
 
         {/* all user profiles */}
-        <div className="flex flex-col mt-2">
+        <div className="flex flex-col gap-3 mt-2">
           {filteredUsers.map((user, index) => (
             <div
               onClick={() => {
@@ -81,7 +101,7 @@ const SideBar = () => {
                 setUnSeenMessages((prev) => ({ ...prev, [user._id]: 0 }));
               }}
               key={index}
-              className={` relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer  max-sm:text-sm  ${selectedUser?._id === user._id && "bg-[#282142]/50"}`}
+              className={` relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer  max-sm:text-xl  ${selectedUser?._id === user._id && "bg-[#282142]/50"}`}
             >
               <img
                 src={user?.profilePic || assets.avatar_icon}

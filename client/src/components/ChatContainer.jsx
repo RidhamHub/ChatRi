@@ -124,6 +124,21 @@ function ChatContainer() {
     }
   }, [messages]);
 
+  // press Esc to go back 
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === "Escape") {
+        setSelectedUser(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  });
+
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
       {showInfo && <RightSideBar onClose={() => setShowInfo(false)} />}
@@ -152,15 +167,10 @@ function ChatContainer() {
             </p>
             <button
               onClick={() => setShowInfo(true)}
-              className="max-md:hidden top-3 right-3 text-xs text-white bg-gray-700 px-3 py-1 rounded hover:bg-gray-600"
+              className="top-3 right-3 text-xs text-white bg-gray-700 px-3 py-1 rounded hover:bg-gray-600"
             >
               Info
             </button>
-            {/* <img
-              src={assets.help_icon}
-              className="max-md:hidden max-w-5"
-              alt=""
-            /> */}
           </div>
 
           {/* chat area................ */}
@@ -178,7 +188,7 @@ function ChatContainer() {
                   />
                 ) : (
                   <p
-                    className={` p-2 max-w-50 md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? "rounded-br-none" : "rounded-bl-none"}`}
+                    className={` p-2 max-w-50 md:text-sm text-xl font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? "rounded-br-none" : "rounded-bl-none"}`}
                   >
                     {msg.text}
                   </p>
@@ -186,7 +196,10 @@ function ChatContainer() {
 
                 {/* sender info and time */}
                 <div
-                  onClick={(e) => { e.stopPropagation(); setActiveMsgId(msg._id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMsgId(msg._id);
+                  }}
                   className="relative group text-center text-xs "
                 >
                   <img

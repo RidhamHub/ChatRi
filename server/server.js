@@ -28,7 +28,6 @@ export const io = new Server(server, {
     cors: {
         origin: [
             "http://localhost:5173",
-            "https://chatri.vercel.app",
             "https://chat-ri.vercel.app",
         ],
         methods: ["GET", "POST"],

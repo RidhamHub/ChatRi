@@ -23,7 +23,7 @@ function RightSideBar({ onClose }) {
   return (
     selectedUser && (
       <div
-        className={` bg-[#8185B2]/10 text-white w-full relative overflow-y-scroll ${selectedUser ? "max-md:hidden" : ""}`}
+        className={` bg-[#8185B2]/10 text-white w-full relative overflow-y-scroll p-5`}
       >
         <div
           onClick={onClose}
@@ -39,7 +39,7 @@ function RightSideBar({ onClose }) {
             className="w-20 aspect-square rounded-full"
           />
           <div className="text-xs  font-light ">
-            <h1 className="px-10 text-xl font-medium mx-auto flex  items-center gap-2">
+            <h1 className="px-10 text-2xl font-medium mx-auto flex  items-center gap-2">
               {onlineUser.includes(selectedUser._id) && (
                 <span className="w-2 h-2 rounded-full bg-green-500"></span>
               )}
@@ -53,7 +53,7 @@ function RightSideBar({ onClose }) {
         <hr className="border-[#ffffff50] my-4" />
 
         {/* media.................. */}
-        <div className="px-5 text-xs">
+        <div className="px-5 text-md">
           <p>Media</p>
           <div className="mt-2 max-h-65 overflow-y-scroll grid grid-cols-2  gap-4 opacity-80">
             {msgImage.map((url, index) => (
