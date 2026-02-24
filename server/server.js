@@ -51,6 +51,29 @@ io.on("connection", (socket) => {
     //emit online users to all connected clients
     io.emit("getOnlineUser", Object.keys(userSocketMap))
 
+    //emit typing comes form fornt end and sent to frontend useEffect 
+    socket.on("typing", ({ to }) => {
+        const receiverSocketId = userSocketMap[to];
+
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("typing", {
+                from :userId,
+            })
+        }
+    })
+
+    //emit stopTyping comes form fornt end and sent to frontend useEffect 
+    socket.on("stopTyping", ({ to }) => {
+        const receiverSocketId = userSocketMap[to];
+
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("stopTyping", {
+                from: userId,
+            })
+        }
+    })
+
+
     socket.on("disconnect", () => {
         console.log("user disconnected");
         delete userSocketMap[userId];

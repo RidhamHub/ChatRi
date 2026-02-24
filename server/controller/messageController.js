@@ -2,7 +2,7 @@ import Message from "../models/message.js";
 import User from "../models/user.js";
 import cloudinary from "../lib/cloudinary.js"
 import { io, userSocketMap } from "../server.js"
-import {  getPublicIdFromUrl } from "../lib/utils.js";
+import { getPublicIdFromUrl } from "../lib/utils.js";
 
 
 // get all users except the logged in user 
@@ -54,6 +54,14 @@ export const getMessages = async (req, res) => {
 
         await Message.updateMany({ senderId: selectedUserId, receiverId: myId }, { seen: true })
 
+        // Notify the sender that their messages have been seen
+        const senderSocketId = userSocketMap[selectedUserId];
+        if (senderSocketId) {
+            io.to(senderSocketId).emit("messageSeen", {
+                seenBy: myId
+            });
+        }
+
         return res.json({ success: true, messages });
 
     } catch (error) {
@@ -65,8 +73,28 @@ export const getMessages = async (req, res) => {
 // api to mark messages as seen using messages id
 export const markMessageAsSeen = async (req, res) => {
     try {
-        const { id } = req.params;
-        await Message.findByIdAndUpdate(id, { seen: true });
+
+        const senderId = req.params.id;
+        const myId = req.user._id;
+
+        await Message.updateMany(
+            {
+                senderId,
+                receiverId: myId,
+                seen: false,
+            },
+            {
+                $set: { seen: true }
+            }
+        );
+
+        //Emit io to get real-time seen 
+        const senderSocketId = userSocketMap[senderId];
+        if (senderSocketId) {
+            io.to(senderSocketId).emit("messageSeen", {
+                seenBy: myId,   // who saw the message
+            })
+        }
 
         return res.json({ success: true });
 

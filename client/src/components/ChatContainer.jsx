@@ -32,6 +32,8 @@ function ChatContainer() {
 
   const [activeMsgId, setActiveMsgId] = useState(null);
 
+  const [isTyping, setIsTyping] = useState(false);
+
   // handle sending messages
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -124,7 +126,7 @@ function ChatContainer() {
     }
   }, [messages]);
 
-  // press Esc to go back 
+  // press Esc to go back
   useEffect(() => {
     const handleEscKey = (e) => {
       if (e.key === "Escape") {
@@ -138,6 +140,45 @@ function ChatContainer() {
       document.removeEventListener("keydown", handleEscKey);
     };
   });
+
+  // if user is opening chat then run this for seen
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessageSeen = ({ seenBy }) => {
+      if (selectedUser && seenBy === selectedUser._id) {
+        setMessages((prev) => prev.map((m) => ({ ...m, seen: true })));
+      }
+    };
+
+    socket.on("messageSeen", handleMessageSeen);
+
+    return () => socket.off("messageSeen", handleMessageSeen);
+  }, [socket, selectedUser]);
+
+  //typing or not typing effect
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("typing", ({ from }) => {
+      if (selectedUser && from == selectedUser._id) {
+        setIsTyping(true);
+        console.log("typing");
+      }
+    });
+
+    socket.on("stopTyping", ({ from }) => {
+      if (selectedUser && from == selectedUser._id) {
+        setIsTyping(false);
+        console.log("stoptyping");
+      }
+    });
+
+    return () => {
+      socket.off("typing");
+      socket.off("stopTyping");
+    };
+  }, [socket, selectedUser]);
 
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
@@ -161,9 +202,12 @@ function ChatContainer() {
             />
             <p className="flex-1 text-lg text-white flex items-center gap-2">
               {selectedUser.fullName}
-              {onlineUser.includes(selectedUser._id) && (
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              )}
+              {onlineUser.includes(selectedUser._id) &&
+                (isTyping ? (
+                  <p className="text-xs text-green-400">Typing...</p>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                ))}
             </p>
             <button
               onClick={() => setShowInfo(true)}
@@ -174,76 +218,102 @@ function ChatContainer() {
           </div>
 
           {/* chat area................ */}
-          <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">
-            {messages?.map((msg, index) => (
-              <div
-                key={msg._id}
-                className={` flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"}`}
-              >
-                {msg.image ? (
-                  <img
-                    src={msg.image}
-                    alt=""
-                    className="max-w-56 border border-gray-700 rounded-lg mb-8 overflow-hidden "
-                  />
-                ) : (
-                  <p
-                    className={` p-2 max-w-50 md:text-sm text-xl font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? "rounded-br-none" : "rounded-bl-none"}`}
-                  >
-                    {msg.text}
-                  </p>
-                )}
-
-                {/* sender info and time */}
+          <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3">
+            {messages?.map((msg, index) => {
+              const isLast = index === messages.length - 1;
+              const isMe = String(msg.senderId) === String(authUser._id);
+              return (
                 <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveMsgId(msg._id);
-                  }}
-                  className="relative group text-center text-xs "
+                  key={msg._id}
+                  className={` flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"}`}
                 >
-                  <img
-                    className="w-7 aspect-square rounded-full"
-                    src={
-                      msg.senderId === authUser._id
-                        ? authUser?.profilePic || assets.avatar_icon
-                        : selectedUser?.profilePic || assets.avatar_icon
-                    }
-                    alt=""
-                  />
+                  {msg.image ? (
+                    <img
+                      src={msg.image}
+                      alt=""
+                      className="max-w-56 border border-gray-700 rounded-lg mb-8 overflow-hidden "
+                    />
+                  ) : (
+                    <p
+                      className={` p-2 max-w-50 md:text-sm text-xl font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? "rounded-br-none" : "rounded-bl-none"}`}
+                    >
+                      {msg.text}
+                    </p>
+                  )}
 
-                  <p className="text-gray-500">
-                    {formateMessageTime(msg.createdAt)}
-                  </p>
-                  {String(msg.senderId) === String(authUser._id) &&
-                    activeMsgId === msg._id && (
-                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center group/del">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(msg._id);
-                            setActiveMsgId(null);
-                          }}
-                          className="bg-red-500 text-white text-[11px] font-medium px-3 py-1.5 rounded-lg shadow-2xl hover:bg-red-600 transition-all active:scale-95 whitespace-nowrap border border-red-400/30"
-                        >
-                          Delete
-                        </button>
-                        {/* Triangle pointer */}
-                        <div className="w-2 h-2 bg-red-500 rotate-45 -mt-1 border-r border-b border-red-400/30"></div>
-                      </div>
+                  {/* sender info and time */}
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMsgId((prev) =>
+                        prev === msg._id ? null : msg._id,
+                      );
+                    }}
+                    className="relative group text-center text-xs "
+                  >
+                    <img
+                      className="w-7 aspect-square rounded-full"
+                      src={
+                        msg.senderId === authUser._id
+                          ? authUser?.profilePic || assets.avatar_icon
+                          : selectedUser?.profilePic || assets.avatar_icon
+                      }
+                      alt=""
+                    />
+                    <p className="text-gray-500">
+                      {formateMessageTime(msg.createdAt)}
+                    </p>
+                    {String(msg.senderId) === String(authUser._id) &&
+                      activeMsgId === msg._id && (
+                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center group/del">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(msg._id);
+                              setActiveMsgId(null);
+                            }}
+                            className="bg-red-500 text-white text-[11px] font-medium px-3 py-1.5 rounded-lg shadow-2xl hover:bg-red-600 transition-all active:scale-95 whitespace-nowrap border border-red-400/30"
+                          >
+                            Delete
+                          </button>
+                          {/* Triangle pointer */}
+                          <div className="w-2 h-2 bg-red-500 rotate-45 -mt-1 border-r border-b border-red-400/30"></div>
+                        </div>
+                      )}
+                    {/* SEEN / DELIVERED — ONLY LAST MESSAGE SENT BY ME */}
+                    {isLast && isMe && (
+                      <p className="absolute top-10 text-[10px] text-gray-400 ">
+                        {msg.seen ? "Seen" : "Delivered"}
+                      </p>
                     )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div ref={scrollEnd}></div>
+            
           </div>
 
           {/* message typing...... */}
           <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3 ">
             <div className="flex-1 flex items-center bg-gray-100/12 px-3 rounded-full">
               <input
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+
+                  socket.emit("typing", {
+                    to: selectedUser._id,
+                  });
+
+                  //stop typing after 1 sec is ideal condition for typing....
+                  clearTimeout(window.typingTimer);
+                  window.typingTimer = setTimeout(() => {
+                    socket.emit("stopTyping", {
+                      to: selectedUser._id,
+                    });
+                  }, 1000);
+                }}
                 value={input}
                 onKeyDown={(e) =>
                   e.key === "Enter" ? handleSendMessage(e) : null

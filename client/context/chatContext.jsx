@@ -5,11 +5,10 @@ import toast from "react-hot-toast";
 export const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
-  const [messages, setMessages] = useState();
+  const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [unSeenMessages, setUnSeenMessages] = useState({});
-  
 
   const { socket, axios } = useContext(AuthContext);
 
@@ -23,7 +22,6 @@ export const ChatProvider = ({ children }) => {
         setUnSeenMessages(data.unSeenMessages);
       }
     } catch (error) {
-      
       toast.error(error.message);
     }
   };
@@ -34,6 +32,11 @@ export const ChatProvider = ({ children }) => {
       const { data } = await axios.get(`/api/messages/${userId}`);
       if (data.success) {
         setMessages(data.messages);
+        setUnSeenMessages((prev) => {
+          const updated = { ...prev };
+          delete updated[userId];
+          return updated;
+        });
       }
     } catch (error) {
       toast.error(error.messages);
@@ -65,13 +68,19 @@ export const ChatProvider = ({ children }) => {
     }
 
     socket.on("newMessage", (newMessage) => {
+      // If chat is open with sender → mark seen immediately
       if (selectedUser && newMessage.senderId === selectedUser._id) {
         // chat box is open for selected user
         newMessage.seen = true;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-        axios.put(`/api/messages/mark/${newMessage._id}`);
+        axios.put(`/api/messages/mark/${newMessage.senderId}`);
+        // tell backend message is seen
+        socket.emit("seenMessage", {
+          senderId: newMessage.senderId,
+        });
       } else {
+        // chat not open → increase unseen count
         setUnSeenMessages((prevUnSeenMessages) => ({
           ...prevUnSeenMessages,
           [newMessage.senderId]: prevUnSeenMessages[newMessage.senderId]
