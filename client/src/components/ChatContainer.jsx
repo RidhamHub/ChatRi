@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import assets from "../assets/assets";
-import { formateMessageTime } from "../lib/Utils";
+import { formateMessageTime } from "../lib/utils";
 import { ChatContext } from "../../context/chatContext";
 import { AuthContext } from "../../context/authContext";
 import toast from "react-hot-toast";
 import RightSideBar from "./RightSideBar";
-import { Socket } from "../lib/socket"; 
+import { Socket } from "../lib/socket";
 import axios from "axios";
 
 
