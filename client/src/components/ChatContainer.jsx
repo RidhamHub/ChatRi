@@ -5,9 +5,8 @@ import { ChatContext } from "../../context/chatContext";
 import { AuthContext } from "../../context/authContext";
 import toast from "react-hot-toast";
 import RightSideBar from "./RightSideBar";
-import { Socket } from "../lib/socket";
-import axios from "axios";
-
+// import { Socket } from "../lib/socket";
+// import axios from "axios";
 
 function ChatContainer() {
   const {
@@ -18,6 +17,7 @@ function ChatContainer() {
     sendMessage,
     getMessages,
   } = useContext(ChatContext);
+
   const { authUser, onlineUser } = useContext(AuthContext);
 
   const [showInfo, setShowInfo] = useState(false);
@@ -27,6 +27,10 @@ function ChatContainer() {
   const [input, setInput] = useState(""); // input for message
 
   const [isuploading, setIsUploading] = useState(false);
+
+  const { socket, axios } = useContext(AuthContext);
+
+  const [activeMsgId, setActiveMsgId] = useState(null);
 
   // handle sending messages
   const handleSendMessage = async (e) => {
@@ -52,14 +56,33 @@ function ChatContainer() {
 
   // delete thay tyare refresh karva mate
   useEffect(() => {
-    Socket.on("messageDeleted", (id) => {
+    if (!socket) return;
+
+    const handleMessageDeleted = (id) => {
       setMessages((prev) => prev.filter((msg) => msg._id !== id));
-    });
+    };
+
+    socket.on("messageDeleted", handleMessageDeleted);
 
     return () => {
-      Socket.off("messageDeleted");
+      socket.off("messageDeleted", handleMessageDeleted);
     };
   }, []);
+
+  // Close delete button when clicking elsewhere
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setActiveMsgId(null);
+    };
+
+    if (activeMsgId) {
+      window.addEventListener("click", handleOutsideClick);
+    }
+
+    return () => {
+      window.removeEventListener("click", handleOutsideClick);
+    };
+  }, [activeMsgId]);
 
   // handle sending an image
   const handleSendImg = async (e) => {
@@ -147,14 +170,6 @@ function ChatContainer() {
                 key={msg._id}
                 className={` flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"}`}
               >
-                {msg.senderId === authUser._id && (
-                  <button
-                    onClick={() => handleDelete(msg._id)}
-                    className="text-xs text-red-400 hover:text-red-600 mb-8"
-                  >
-                    Delete
-                  </button>
-                )}
                 {msg.image ? (
                   <img
                     src={msg.image}
@@ -170,7 +185,10 @@ function ChatContainer() {
                 )}
 
                 {/* sender info and time */}
-                <div className="text-center text-xs ">
+                <div
+                  onClick={(e) => { e.stopPropagation(); setActiveMsgId(msg._id); }}
+                  className="relative group text-center text-xs "
+                >
                   <img
                     className="w-7 aspect-square rounded-full"
                     src={
@@ -184,6 +202,23 @@ function ChatContainer() {
                   <p className="text-gray-500">
                     {formateMessageTime(msg.createdAt)}
                   </p>
+                  {String(msg.senderId) === String(authUser._id) &&
+                    activeMsgId === msg._id && (
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center group/del">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(msg._id);
+                            setActiveMsgId(null);
+                          }}
+                          className="bg-red-500 text-white text-[11px] font-medium px-3 py-1.5 rounded-lg shadow-2xl hover:bg-red-600 transition-all active:scale-95 whitespace-nowrap border border-red-400/30"
+                        >
+                          Delete
+                        </button>
+                        {/* Triangle pointer */}
+                        <div className="w-2 h-2 bg-red-500 rotate-45 -mt-1 border-r border-b border-red-400/30"></div>
+                      </div>
+                    )}
                 </div>
               </div>
             ))}
