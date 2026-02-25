@@ -34,6 +34,8 @@ function ChatContainer() {
 
   const [isTyping, setIsTyping] = useState(false);
 
+  const [showConfirm, setShowConfirm] = useState(false); // for clear chat
+
   // handle sending messages
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -53,6 +55,18 @@ function ChatContainer() {
     } catch (error) {
       console.log("error in deleting message (frontend) : ", error);
       toast.error("Failed to delete message ");
+    }
+  };
+
+  // handle ClearChat
+  const handleClearChat = async () => {
+    try {
+      if (!confirm("are you sure ??")) return;
+      await axios.put(`/api/messages/clear/${selectedUser._id}`);
+      setMessages([]); // instantly clear UI
+      setShowConfirm(false); // close modal
+    } catch (error) {
+      console.log("Error clearing chat:", error);
     }
   };
 
@@ -113,6 +127,7 @@ function ChatContainer() {
     reader.readAsDataURL(file);
   };
 
+  //on selecting user get message
   useEffect(() => {
     if (selectedUser) {
       getMessages(selectedUser._id);
@@ -187,7 +202,7 @@ function ChatContainer() {
       {!showInfo && (
         <>
           {/* name , picture and info icon  */}
-          <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500">
+          <div className="flex items-center justify-center gap-3 py-3 mx-4 border-b border-stone-500">
             <img
               onClick={() => setSelectedUser(null)}
               className="cursor-pointer max-w-7"
@@ -196,25 +211,72 @@ function ChatContainer() {
             />
 
             <img
-              className="w-8 aspect-square rounded-full"
+              onClick={() => setShowInfo(true)}
+              className="w-8 aspect-square rounded-full  cursor-pointerF"
               src={selectedUser.profilePic || assets.avatar_icon}
               alt=""
             />
-            <p className="flex-1 text-lg text-white flex items-center gap-2">
+            <p
+              onClick={() => setShowInfo(true)}
+              className="flex-1 text-lg text-white flex items-center gap-2 cursor-pointer"
+            >
               {selectedUser.fullName}
-              {onlineUser.includes(selectedUser._id) &&
-                (isTyping ? (
+              {onlineUser.includes(selectedUser._id) ? (
+                isTyping ? (
                   <p className="text-xs text-green-400">Typing...</p>
                 ) : (
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                ))}
+                )
+              ) : (
+                <span className="w-2 h-2 rounded-full bg-neutral-400"></span>
+              )}
             </p>
             <button
-              onClick={() => setShowInfo(true)}
-              className="top-3 right-3 text-xs text-white bg-gray-700 px-3 py-1 rounded hover:bg-gray-600"
+              // onClick={handleClearChat}
+              onClick={() => setShowConfirm(true)}
+              className="text-xs px-4 py-1.5 rounded-lg font-medium bg-violet-500/30 hover:bg-violet-500  text-white shadow-md hover:shadow-lg active:scale-95 transition-all duration-200"
             >
-              Info
+              Clear Chat
             </button>
+            {showConfirm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                {/* Modal */}
+                <div
+                  className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl p-6 w-80 
+                    animate-[fadeIn_.2s_ease] scale-100"
+                >
+                  {/* Title */}
+                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                    Clear Chat
+                  </h2>
+                  {/* Message */}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    This will permanently delete whole conversation for you
+                    only.
+                    <span className="font-medium text-red-500">
+                      This cannot be undone.
+                    </span>
+                  </p>
+                  {/* Buttons */}
+                  <div className="flex justify-end gap-3 mt-6">
+                    {/* Confirm */}
+                    <button
+                      onClick={handleClearChat}
+                      className="px-4 py-1.5 text-sm rounded-lg text-white bg-linear-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 shadow hover:shadow-md transition active:scale-95"
+                    >
+                      Clear
+                    </button>
+                    {/* Cancel */}
+                    <button
+                      onClick={() => setShowConfirm(false)}
+                      className="px-4 py-1.5 text-sm rounded-lg border border-gray-300  text-white bg-violet-500/30 hover:bg-violet-500   transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* chat area................ */}
@@ -282,9 +344,11 @@ function ChatContainer() {
                       )}
                     {/* SEEN / DELIVERED — ONLY LAST MESSAGE SENT BY ME */}
                     {isLast && isMe && (
-                      <p className="absolute top-10 text-[10px] text-gray-400 ">
-                        {msg.seen ? "Seen" : "Delivered"}
-                      </p>
+                      <div className="w-full flex justify-end mt-1">
+                        <p className="text-[11px] text-gray-400 ">
+                          {msg.seen ? "Seen" : "Sent"}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -292,7 +356,6 @@ function ChatContainer() {
             })}
 
             <div ref={scrollEnd}></div>
-            
           </div>
 
           {/* message typing...... */}

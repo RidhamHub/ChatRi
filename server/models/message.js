@@ -22,6 +22,12 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    clearedFor: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+    ],
 
 
 
