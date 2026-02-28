@@ -7,7 +7,7 @@ const HomePage = () => {
   const { selectedUser } = useContext(ChatContext);
 
   return (
-    <div className="border w-full h-screen h-[100dvh] overflow-hidden sm:px-[15%] sm:py-[5%]">
+    <div className="border w-full h-screen overflow-hidden sm:px-[15%] sm:py-[5%]">
       <div
         className="grid grid-cols-1 md:grid-cols-[1fr_2fr]
         relative overflow-hidden h-full
