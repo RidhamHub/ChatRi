@@ -178,7 +178,7 @@ function ChatContainer() {
     socket.on("typing", ({ from }) => {
       if (selectedUser && from == selectedUser._id) {
         setIsTyping(true);
-        console.log("typing");
+        // console.log("typing");
       }
     });
 
@@ -196,7 +196,7 @@ function ChatContainer() {
   }, [socket, selectedUser]);
 
   return selectedUser ? (
-    <div className="h-full overflow-scroll relative backdrop-blur-lg">
+    <div className="h-full overflow-y-auto relative backdrop-blur-lg">
       {showInfo && <RightSideBar onClose={() => setShowInfo(false)} />}
 
       {!showInfo && (
