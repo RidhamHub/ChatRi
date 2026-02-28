@@ -196,13 +196,13 @@ function ChatContainer() {
   }, [socket, selectedUser]);
 
   return selectedUser ? (
-    <div className="h-full overflow-y-auto relative backdrop-blur-lg">
+    <div className="h-full flex flex-col relative backdrop-blur-lg overflow-hidden">
       {showInfo && <RightSideBar onClose={() => setShowInfo(false)} />}
 
       {!showInfo && (
         <>
           {/* name , picture and info icon  */}
-          <div className="flex items-center justify-center gap-3 py-3 mx-4 border-b border-stone-500">
+          <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500 shrink-0">
             <img
               onClick={() => setSelectedUser(null)}
               className="cursor-pointer max-w-7"
@@ -280,7 +280,7 @@ function ChatContainer() {
           </div>
 
           {/* chat area................ */}
-          <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3">
+          <div className="flex-1 overflow-y-auto p-3 scroll-smooth">
             {messages?.map((msg, index) => {
               const isLast = index === messages.length - 1;
               const isMe = String(msg.senderId) === String(authUser._id);
@@ -297,7 +297,7 @@ function ChatContainer() {
                     />
                   ) : (
                     <p
-                      className={` p-2 max-w-50 md:text-sm text-xl font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? "rounded-br-none" : "rounded-bl-none"}`}
+                      className={` p-2 max-w-50 md:text-sm text-xl font-light rounded-lg mb-8 break-all bg-white/10 text-white ${msg.senderId === authUser._id ? "rounded-br-none" : "rounded-bl-none"}`}
                     >
                       {msg.text}
                     </p>
@@ -359,7 +359,7 @@ function ChatContainer() {
           </div>
 
           {/* message typing...... */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3 ">
+          <div className="flex items-center gap-3 p-3 shrink-0 bg-black/10">
             <div className="flex-1 flex items-center bg-gray-100/12 px-3 rounded-full">
               <input
                 onChange={(e) => {
